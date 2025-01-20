@@ -1,0 +1,122 @@
+#include <Stepper.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <RTClib.h>
+#include <Keypad.h>
+
+const int stepsPerRevolution = 2048;
+Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
+LiquidCrystal_I2C lcd(0x27, 16, 4);
+
+const byte ROWS = 4;
+const byte COLS = 4;
+char keys[ROWS][COLS] = {
+  {'1', '2', '3', 'A'},
+  {'4', '5', '6', 'B'},
+  {'7', '8', '9', 'C'},
+  {'*', '0', '#', 'D'}
+};
+byte rowPins[ROWS] = {2, 3, 4, 5};
+byte colPins[COLS] = {A0, A1, A2, A3};
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+RTC_DS3231 rtc;
+
+struct Medicine {
+  String name;
+  int hour;
+  int minute;
+};
+
+Medicine meds[3] = {
+  {"Medicine 1", 8, 0},
+  {"Medicine 2", 14, 0},
+  {"Medicine 3", 20, 0}
+};
+
+int currentMedIndex = 0;
+bool timeSetMode = false;
+int newHour = 0, newMinute = 0;
+bool settingHour = true;
+
+void setup() {
+  Serial.begin(9600);
+  lcd.begin(16, 4);
+  lcd.backlight();
+  
+  if (!rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power, setting the time!");
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+}
+
+void loop() {
+  DateTime now = rtc.now();
+  
+  if (timeSetMode) {
+    char key = keypad.getKey();
+    if (key) {
+      handleTimeSetting(key);
+    }
+  } else {
+    displayTime(now);
+    checkMedicationTime(now);
+    char key = keypad.getKey();
+    if (key == '#') {
+      timeSetMode = true;
+    }
+  }
+}
+
+void displayTime(DateTime now) {
+  lcd.setCursor(0, 0);
+  lcd.print("Time: ");
+  lcd.print(now.hour());
+  lcd.print(":");
+  lcd.print(now.minute());
+}
+
+void checkMedicationTime(DateTime now) {
+  for (int i = 0; i < 3; i++) {
+    if (now.hour() == meds[i].hour && now.minute() == meds[i].minute) {
+      dispenseMedicine(i);
+    }
+  }
+}
+
+void dispenseMedicine(int medIndex) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Dispensing ");
+  lcd.setCursor(0, 1);
+  lcd.print(meds[medIndex].name);
+  myStepper.step(stepsPerRevolution);
+  delay(500);
+  myStepper.step(-stepsPerRevolution);
+}
+
+void handleTimeSetting(char key) {
+  if (key >= '0' && key <= '9') {
+    int value = key - '0';
+    if (settingHour) {
+      newHour = (newHour * 10) + value;
+      if (newHour > 23) newHour = 0;
+    } else {
+      newMinute = (newMinute * 10) + value;
+      if (newMinute > 59) newMinute = 0;
+    }
+  } else if (key == '*') {
+    settingHour = !settingHour;
+  } else if (key == '#') {
+    rtc.adjust(DateTime(rtc.now().year(), rtc.now().month(), rtc.now().day(), newHour, newMinute, 0));
+    timeSetMode = false;
+    newHour = 0;
+    newMinute = 0;
+    settingHour = true;
+  }
+}
