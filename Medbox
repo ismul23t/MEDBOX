@@ -1,7 +1,8 @@
 To build the medication reminder and dispenser system, you'll need the following components:
 
-=Hardware Components=
 
+
+=Hardware Components=
 
 1.Arduino Board (Arduino Uno or any compatible board)
 
@@ -26,7 +27,6 @@ To build the medication reminder and dispenser system, you'll need the following
 
 
 =Software Libraries=
-
 
 1.Keypad Library:
 
