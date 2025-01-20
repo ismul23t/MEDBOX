@@ -2,6 +2,7 @@ To build the medication reminder and dispenser system, you'll need the following
 
 =Hardware Components=
 
+
 1.Arduino Board (e.g., Arduino Uno or any compatible board)
 
 2.RTC Module (Real-Time Clock) (DS3231)
@@ -23,7 +24,9 @@ To build the medication reminder and dispenser system, you'll need the following
 10.Breadboard (optional but helpful for testing)
 
 
+
 =Software Libraries=
+
 
 1.Keypad Library:
 
