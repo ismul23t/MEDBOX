@@ -6,4 +6,4 @@ RTC Module| VCC, GND	       |5V, GND
 Keypad    | R1, R2, R3, R4     |A0, A1, A2, A3
           | C1, C2, C3, C4     |2, 3, 4, 5
 Stepper   | IN1, IN2, IN3, IN4 |8, 10, 9, 11
-Buzzer	 |-	              |12, GND
+Buzzer	  |-	              |12, GND
